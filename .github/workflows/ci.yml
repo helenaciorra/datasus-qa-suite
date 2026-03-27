@@ -1,0 +1,31 @@
+name: Cypress QA Suite - PNI 2025
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 8 * * 1'  # toda segunda-feira às 8h
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Rodar testes Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          browser: chrome
+          headless: true
+
+      - name: Upload de resultados em caso de falha
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
