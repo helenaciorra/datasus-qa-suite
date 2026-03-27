@@ -67,4 +67,9 @@ npx cypress run
 
 ## Results
 
-17 tests — 0 failures
+| Suite | Tests | Status |
+|---|---|---|
+| 01_homepage | 2 | ✅ passing |
+| 02_api_pni_2025 | 17 | ✅ passing |
+| 03_api_pni_multi_year | 91 | ✅ passing |
+| **Total** | **110** | **✅ all passing** |
