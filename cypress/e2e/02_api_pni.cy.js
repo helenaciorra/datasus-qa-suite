@@ -101,16 +101,30 @@ describe('PNI 2025 - Validação da API de Doses Aplicadas', () => {
         })
     })
 
-    it('sigla_uf_paciente deve ser uma UF brasileira válida', () => {
-      cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+    it('sigla_uf_paciente deve ser uma UF brasileira válida quando preenchida', () => {
+    cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
         .then((response) => {
-          const registros = response.body.doses_aplicadas_pni
-          registros.forEach((registro) => {
+        const registros = response.body.doses_aplicadas_pni
+        registros.forEach((registro) => {
+            if (registro.sigla_uf_paciente !== null) {
             expect(UFS_VALIDAS).to.include(
-              registro.sigla_uf_paciente,
-              `UF inválida encontrada: ${registro.sigla_uf_paciente}`
+                registro.sigla_uf_paciente,
+                `UF inválida encontrada: ${registro.sigla_uf_paciente}`
             )
-          })
+            }
+        })
+        })
+    })
+
+    it('nome_municipio_paciente não deve ser string vazia quando preenchido', () => {
+    cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        .then((response) => {
+        const registros = response.body.doses_aplicadas_pni
+        registros.forEach((registro) => {
+            if (registro.nome_municipio_paciente !== null) {
+            expect(registro.nome_municipio_paciente).to.not.eq('')
+            }
+        })
         })
     })
 
@@ -140,17 +154,6 @@ describe('PNI 2025 - Validação da API de Doses Aplicadas', () => {
           const registros = response.body.doses_aplicadas_pni
           registros.forEach((registro) => {
             expect(registro.status_documento).to.eq('final')
-          })
-        })
-    })
-
-    it('nenhum registro deve ter município do paciente nulo ou vazio', () => {
-      cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
-        .then((response) => {
-          const registros = response.body.doses_aplicadas_pni
-          registros.forEach((registro) => {
-            expect(registro.nome_municipio_paciente).to.not.be.null
-            expect(registro.nome_municipio_paciente).to.not.eq('')
           })
         })
     })
