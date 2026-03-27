@@ -55,3 +55,16 @@ This project was built to demonstrate practical QA engineering skills using real
 
 ## Running Locally
 ```bash
+# Install dependencies
+npm install
+
+# Open Cypress interactive mode
+npx cypress open
+
+# Run headless
+npx cypress run
+```
+
+## Results
+
+17 tests — 0 failures
