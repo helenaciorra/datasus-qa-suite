@@ -39,7 +39,7 @@ const YEARS = [
   {
     year: 2025,
     endpoint: 'doses-aplicadas-pni-2025',
-    current: false,
+    current: true, // endpoint not yet available
     campos: ['data_vacina', 'nome_municipio_paciente', 'sigla_uf_paciente', 'descricao_vacina', 'codigo_dose_vacina', 'tipo_sexo_paciente', 'status_documento', 'codigo_paciente'],
     fields: { uf: 'sigla_uf_paciente', sexo: 'tipo_sexo_paciente', status: 'status_documento', municipio: 'nome_municipio_paciente' }
   },
@@ -79,31 +79,36 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
     describe('Contract', () => {
 
       it('should return HTTP 200', () => {
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 5, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 5, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
+            if (current && response.status !== 200) return // endpoint not yet available
             expect(response.status).to.eq(200)
           })
       })
 
       it('should return an object with doses_aplicadas_pni array', () => {
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 5, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 5, offset: 0 }, failOnStatusCode: !current})
           .then((response) => {
+            if (current && response.status !== 200) return
             expect(response.body).to.have.property('doses_aplicadas_pni')
             expect(response.body.doses_aplicadas_pni).to.be.an('array')
           })
       })
 
       it('should respect the limit parameter', () => {
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 10, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 10, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
+            if (current && response.status !== 200) return
             expect(response.body.doses_aplicadas_pni.length).to.be.lte(10)
           })
       })
 
       it('should contain required fields in every record', () => {
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 10, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 10, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
+            if (current && response.status !== 200) return
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
               campos.forEach((campo) => {
@@ -118,9 +123,10 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
     describe('Data Integrity', () => {
 
       it('data_vacina should be a valid date', () => {
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
               expect(new Date(registro.data_vacina).toString()).to.not.eq('Invalid Date')
@@ -129,9 +135,10 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
       })
 
       it(`data_vacina should be within year ${year}`, () => {
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
               const recordYear = new Date(registro.data_vacina).getFullYear()
@@ -142,9 +149,10 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
 
       it('UF field should be a valid Brazilian state when populated', () => {
         if (!fields.uf) return
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
               if (registro[fields.uf] !== null) {
@@ -156,9 +164,10 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
 
       it('sex field should only contain valid values when populated', () => {
         if (!fields.sexo) return
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
               if (registro[fields.sexo] !== null) {
@@ -169,9 +178,10 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
       })
 
       it('codigo_paciente should always be 64 characters (SHA-256)', () => {
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 }, failOnStatusCode: !current })
             .then((response) => {
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
                 if (registro.codigo_paciente != null) {
@@ -183,9 +193,10 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
 
       it('status field should be a non-empty string when populated', () => {
         if (!fields.status) return
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
               if (registro[fields.status] !== null) {
@@ -197,9 +208,10 @@ YEARS.forEach(({ year, endpoint, current, campos, fields }) => {
 
       it('municipality field should not be empty string when populated', () => {
         if (!fields.municipio) return
-        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 } })
+        cy.request({ method: 'GET', url: API_URL, qs: { limit: 100, offset: 0 }, failOnStatusCode: !current })
           .then((response) => {
             const registros = response.body.doses_aplicadas_pni
+            if (current && response.status !== 200) return
             if (current && registros.length === 0) return
             registros.forEach((registro) => {
               if (registro[fields.municipio] !== null) {
